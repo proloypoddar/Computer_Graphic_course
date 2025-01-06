@@ -14,6 +14,7 @@ rocket_speed = 10
 
 projectiles = []
 projectile_radius = 8
+
 projectile_speed = 10
 
 circle_fill = []
@@ -80,6 +81,7 @@ def draw_rocket(x, y):
 
 def display_score_and_lives():
     glColor3f(1.0, 1.0, 1.0)
+    
     glRasterPos2f(-w_width // 2 + 10, w_height // 2 - 20)
     for char in f"Score: {score} Lives: {lives}":
 
