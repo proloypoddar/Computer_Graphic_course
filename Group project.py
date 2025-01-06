@@ -43,7 +43,7 @@ def generate_pillars():
 
 def draw_pillar(x, gap_y):
     """Draw a single pillar with a gap at the specified y-coordinate."""
-    glColor3f(0.2, 0.8, 0.2)  # Green
+    glColor3f(0.6, 0.8, 0.3)  # Green
     # Lower pillar
     glBegin(GL_QUADS)
     glVertex2f(x, 0)
@@ -176,7 +176,7 @@ def draw_house(x, y, width, height):
 
 def draw_bird(y):
     """Draw the bird."""
-    glColor3f(1.0, 1.0, 0.0)  # Yellow bird
+    glColor3f(1.0, 0.2, 0.4)  # Yellow bird
     glBegin(GL_QUADS)
     glVertex2f(100, y)
     glVertex2f(100 + bird_width, y)
@@ -226,9 +226,9 @@ def display():
 def draw_score():
     """Draw the score on the screen."""
     glColor3f(1.0, 1.0, 1.0)  # White text
-    glRasterPos2f(10, height - 30)
+    glRasterPos2f(20, height - 30)
     for c in str(score):
-        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, ord(c))
+        glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, ord(c))
 
 def timer(value):
     """Timer function to update game state."""
@@ -274,7 +274,7 @@ def key_pressed(key, x, y):
 glutInit()
 glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB)
 glutInitWindowSize(width, height)
-glutCreateWindow(b"Flappy Bird Game with Pillars")
+glutCreateWindow(b"Flappy Bird Game CSE 423 Lab Project")
 
 init()
 glutDisplayFunc(display)
