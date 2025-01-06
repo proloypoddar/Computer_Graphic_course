@@ -23,6 +23,7 @@ bird_lift = 10
 
 # Game state
 is_game_running = True
+score = 0
 
 def init():
     glClearColor(0.0, 0.0, 0.0, 1.0)  # Set background color to black
@@ -59,14 +60,24 @@ def draw_pillar(x, gap_y):
     glVertex2f(x, height)
     glEnd()
 
+    # Add some vertical lines for pillar detail
+    glColor3f(0.5, 0.5, 0.5)  # Gray
+    line_spacing = 5
+    for i in range(0, pillar_width, line_spacing):
+        glBegin(GL_LINES)
+        glVertex2f(x + i, gap_y)
+        glVertex2f(x + i, gap_y + pillar_gap)
+        glEnd()
+
 def update_pillars():
     """Update pillar positions and generate new ones as needed."""
-    global pillars
+    global pillars, score
     for pillar in pillars:
         pillar['x'] -= pillar_speed  # Move pillars to the left
 
-    # Remove pillars that move off-screen and add new ones
-    if pillars and pillars[0]['x'] + pillar_width < 0:
+    # Check for passing a pillar (increase score)
+    if pillars and pillars[0]['x'] + pillar_width < 100:  # Bird's x position
+        score += 1
         pillars.pop(0)  # Remove the first pillar
         new_x = pillars[-1]['x'] + 300  # Space between pillars
         new_gap_y = random.randint(height // 4, height // 2)
@@ -186,28 +197,16 @@ def check_collision():
         pillar_top = pillar['gap_y'] + pillar_gap
         if bird_x + bird_width > pillar_left and bird_x < pillar_right:
             if bird_bottom < pillar_bottom or bird_top > pillar_top:
-                return True  # Collision detected
+                return True  # Bird hit a pillar
     return False
 
-def key_pressed(key, x, y):
-    """Handle key presses."""
-    global bird_velocity, bird_y, is_game_running
-    if key == b' ' and not is_game_running:  # Restart when space is pressed
-        bird_y = height // 2
-        bird_velocity = 0
-        is_game_running = True
-        pillars.clear()
-        generate_pillars()
-
-    if key == b' ' and is_game_running:  # Make bird jump
-        bird_velocity = bird_lift
-
 def display():
-    """Display the scene."""
     glClear(GL_COLOR_BUFFER_BIT)  # Clear the screen
 
-    # Draw the background, trees, and house
+    # Draw the background
     draw_background()
+
+    # Draw trees and house
     draw_tree(100, 200, 20, 80, 50)
     draw_tree(300, 180, 25, 100, 60, layers=4)
     draw_tree(500, 220, 20, 70, 45)
@@ -219,31 +218,61 @@ def display():
     # Draw bird
     draw_bird(bird_y)
 
-    glutSwapBuffers()  # Swap buffers for double buffering
+    # Draw score
+    draw_score()
+
+    glFlush()  # Render now
+
+def draw_score():
+    """Draw the score on the screen."""
+    glColor3f(1.0, 1.0, 1.0)  # White text
+    glRasterPos2f(10, height - 30)
+    for c in str(score):
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, ord(c))
 
 def timer(value):
-    """Timer function to update the game state."""
+    """Timer function to update game state."""
     global bird_y, bird_velocity, is_game_running
-    if is_game_running:
-        bird_velocity += bird_gravity  # Apply gravity
-        bird_y += bird_velocity  # Move bird based on velocity
 
-        if bird_y < 0:
+    if is_game_running:
+        # Update bird physics
+        bird_velocity += bird_gravity
+        bird_y += bird_velocity
+
+        if bird_y <= 0:
             bird_y = 0
-        elif bird_y > height:
-            bird_y = height
+            bird_velocity = 0
+        if bird_y + bird_height >= height:
+            bird_y = height - bird_height
+            bird_velocity = 0
 
         update_pillars()
 
-        if check_collision():  # Game over when bird hits pillar
-            is_game_running = False
+        # Check for collisions
+        if check_collision():
+            is_game_running = False  # End game on collision
 
-    glutPostRedisplay()
+    glutPostRedisplay()  # Mark the current window as needing to be redisplayed
     glutTimerFunc(16, timer, 0)  # Call this function again in ~16ms (60 FPS)
+
+def key_pressed(key, x, y):
+    """Handle key press events."""
+    global bird_velocity, is_game_running, score, pillars
+
+    if key == b' ' and not is_game_running:  # Restart game on spacebar press
+        is_game_running = True
+        bird_y = height // 2
+        bird_velocity = 0
+        score = 0
+        pillars.clear()
+        generate_pillars()
+
+    if key == b' ' and is_game_running:  # Make bird jump
+        bird_velocity = bird_lift
 
 # Initialize and run
 glutInit()
-glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB)
+glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB)
 glutInitWindowSize(width, height)
 glutCreateWindow(b"Flappy Bird Game with Pillars")
 
