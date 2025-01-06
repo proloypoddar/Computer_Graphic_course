@@ -1,8 +1,8 @@
-import math
 from OpenGL.GL import *
 from OpenGL.GLUT import *
 from OpenGL.GLU import *
 import random
+import math
 
 # Window dimensions
 width, height = 800, 600
@@ -30,45 +30,23 @@ def generate_pillars():
         x_position += 300  # Space between pillars
 
 def draw_pillar(x, gap_y):
-    """Draw a single pillar with gradient and shading."""
-    # Draw lower pillar
-    draw_pillar_section(x, 0, gap_y)
-    # Draw upper pillar
-    draw_pillar_section(x, gap_y + pillar_gap, height)
-
-def draw_pillar_section(x, y_bottom, y_top):
-    """Draw a pillar section with gradient and shading."""
-    # Gradient color
+    """Draw a single pillar with a gap at the specified y-coordinate."""
+    glColor3f(0.2, 0.8, 0.2)  # Green
+    # Lower pillar
     glBegin(GL_QUADS)
-    glColor3f(0.2, 0.7, 0.3)  # Lighter green
-    glVertex2f(x, y_bottom)
-    glVertex2f(x + pillar_width, y_bottom)
-    glColor3f(0.1, 0.5, 0.2)  # Darker green
-    glVertex2f(x + pillar_width, y_top)
-    glVertex2f(x, y_top)
+    glVertex2f(x, 0)
+    glVertex2f(x + pillar_width, 0)
+    glVertex2f(x + pillar_width, gap_y)
+    glVertex2f(x, gap_y)
     glEnd()
 
-    # Shading for the left side
+    # Upper pillar
     glBegin(GL_QUADS)
-    glColor3f(0.8, 0.25, 0.25)  # Darker green
-    glVertex2f(x, y_bottom)
-    glVertex2f(x + 5, y_bottom)
-    glVertex2f(x + 5, y_top)
-    glVertex2f(x, y_top)
+    glVertex2f(x, gap_y + pillar_gap)
+    glVertex2f(x + pillar_width, gap_y + pillar_gap)
+    glVertex2f(x + pillar_width, height)
+    glVertex2f(x, height)
     glEnd()
-
-    # Grooves for design
-    draw_pillar_grooves(x, y_bottom, y_top)
-
-def draw_pillar_grooves(x, y_bottom, y_top):
-    """Add horizontal grooves to the pillar for design."""
-    glColor3f(0.8, 0.25, 0.25)  # Groove color
-    groove_spacing = 20
-    for y in range(y_bottom + groove_spacing, y_top, groove_spacing):
-        glBegin(GL_LINES)
-        glVertex2f(x + 5, y)
-        glVertex2f(x + pillar_width - 5, y)
-        glEnd()
 
 def update_pillars():
     """Update pillar positions and generate new ones as needed."""
@@ -88,6 +66,30 @@ def draw_pillars():
     for pillar in pillars:
         draw_pillar(pillar['x'], pillar['gap_y'])
 
+def display():
+    glClear(GL_COLOR_BUFFER_BIT)  # Clear the screen
+
+    # Draw the background
+    draw_background()
+
+    # Draw trees and house
+    draw_tree(100, 200, 20, 80, 50)
+    draw_tree(300, 180, 25, 100, 60, layers=4)
+    draw_tree(500, 220, 20, 70, 45)
+    draw_house(600, 200, 120, 90)
+
+    # Draw pillars
+    draw_pillars()
+
+    glFlush()  # Render now
+
+def timer(value):
+    """Timer function to update game state."""
+    update_pillars()
+    glutPostRedisplay()  # Mark the current window as needing to be redisplayed
+    glutTimerFunc(16, timer, 0)  # Call this function again in ~16ms (60 FPS)
+
+# Background and object drawing functions
 def draw_background():
     glBegin(GL_QUADS)
     glColor3f(0.4, 0.7, 1.0)  # Light blue
@@ -130,33 +132,51 @@ def draw_circle(cx, cy, radius):
         px, py = px * cos_theta - py * sin_theta, px * sin_theta + py * cos_theta
     glEnd()
 
-def display():
-    glClear(GL_COLOR_BUFFER_BIT)  # Clear the screen
+def draw_house(x, y, width, height):
+    glColor3f(0.8, 0.4, 0.1)
+    glBegin(GL_QUADS)
+    glVertex2f(x, y)
+    glVertex2f(x + width, y)
+    glVertex2f(x + width, y + height)
+    glVertex2f(x, y + height)
+    glEnd()
 
-    # Draw the background
-    draw_background()
+    glColor3f(0.7, 0.0, 0.0)
+    glBegin(GL_TRIANGLES)
+    glVertex2f(x, y + height)
+    glVertex2f(x + width, y + height)
+    glVertex2f(x + width / 2, y + height + height * 0.5)
+    glEnd()
 
-    # Draw trees and house
-    draw_tree(100, 200, 20, 80, 50)
-    draw_tree(300, 180, 25, 100, 60, layers=4)
-    draw_tree(500, 220, 20, 70, 45)
+    glColor3f(0.5, 0.25, 0.1)
+    door_width = width * 0.2
+    door_height = height * 0.4
+    door_x = x + width * 0.4
+    glBegin(GL_QUADS)
+    glVertex2f(door_x, y)
+    glVertex2f(door_x + door_width, y)
+    glVertex2f(door_x + door_width, y + door_height)
+    glVertex2f(door_x, y + door_height)
+    glEnd()
 
-    # Draw pillars
-    draw_pillars()
-
-    glFlush()  # Render now
-
-def timer(value):
-    """Timer function to update game state."""
-    update_pillars()
-    glutPostRedisplay()  # Mark the current window as needing to be redisplayed
-    glutTimerFunc(16, timer, 0)  # Call this function again in ~16ms (60 FPS)
+    glColor3f(0.0, 0.7, 0.9)
+    window_size = width * 0.2
+    glBegin(GL_QUADS)
+    glVertex2f(x + width * 0.2, y + height * 0.6)
+    glVertex2f(x + width * 0.2 + window_size, y + height * 0.6)
+    glVertex2f(x + width * 0.2 + window_size, y + height * 0.8)
+    glVertex2f(x + width * 0.2, y + height * 0.8)
+    glVertex2f(x + width * 0.6, y + height * 0.6)
+    glVertex2f(x + width * 0.6 + window_size, y + height * 0.6)
+    glVertex2f(x + width * 0.6 + window_size, y + height * 0.8)
+    glVertex2f(x + width * 0.6, y + height * 0.8)
+    glEnd()
 
 # Initialize and run
 glutInit()
 glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB)
 glutInitWindowSize(width, height)
-glutCreateWindow(b"Flappy Bird Game with Designed Pillars")
+glutCreateWindow(b"Flappy Bird Game with Pillars")
 
 init()
 glutDisplayFunc(display)
