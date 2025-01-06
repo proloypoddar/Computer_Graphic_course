@@ -81,34 +81,28 @@ def draw_pilr():
         draw_pillar(pillar['x'], pillar['gap_y'])
 
 def draw_mountain(base_x, base_y, width, height):
-
-    glColor3f(0.5, 0.35, 0.05)  
+    glColor3f(0.5, 0.35, 0.05)
     glBegin(GL_TRIANGLES)
     glVertex2f(base_x, base_y)
     glVertex2f(base_x + width / 2, base_y + height)
     glVertex2f(base_x + width, base_y)
     glEnd()
 
-    
 def draw_background():
-
     glBegin(GL_QUADS)
-    glColor3f(0.4, 0.7, 1.0) 
+    glColor3f(0.4, 0.7, 1.0)
     glVertex2f(0, height)
     glVertex2f(width, height)
-    glColor3f(1.0, 1.0, 1.0) 
+    glColor3f(1.0, 1.0, 1.0)
     glVertex2f(width, height * 0.5)
     glVertex2f(0, height * 0.5)
     glEnd()
 
-
     draw_mountain(100, height * 0.2, 200, 300)
-   
     draw_mountain(600, height * 0.5, 300, 350)
 
-
     glBegin(GL_QUADS)
-    glColor3f(0.1, 0.6, 0.2)  
+    glColor3f(0.1, 0.6, 0.2)
     glVertex2f(0, height * 0.5)
     glVertex2f(width, height * 0.5)
     glVertex2f(width, 0)
@@ -127,20 +121,7 @@ def draw_tree(x, y, trunk_width, trunk_height, foliage_radius, layers=3):
     glColor3f(0.0, 0.5, 0.0)
     for i in range(layers):
         radius = foliage_radius * (1 - 0.2 * i)
-        draw_circle(x + trunk_width / 2, y + trunk_height + i * radius * 0.7, radius)
-
-def draw_circle(cx, cy, radius):
-    num_segments = 100
-    theta = 2 * math.pi / num_segments
-    cos_theta = math.cos(theta)
-    sin_theta = math.sin(theta)
-
-    px, py = radius, 0
-    glBegin(GL_POLYGON)
-    for _ in range(num_segments):
-        glVertex2f(cx + px, cy + py)
-        px, py = px * cos_theta - py * sin_theta, px * sin_theta + py * cos_theta
-    glEnd()
+        draw_circle_midpoint(x + trunk_width / 2, y + trunk_height + i * radius * 0.7, radius)
 
 def draw_house(x, y, width, height):
     glColor3f(0.8, 0.4, 0.1)
@@ -183,19 +164,18 @@ def draw_house(x, y, width, height):
     glEnd()
 
 def draw_bird(y):
-    glColor3f(1.0, 0.8, 0.2) 
-    draw_circle(100 + bird_w // 2, y + bird_h // 2, bird_w // 2)
+    glColor3f(1.0, 0.8, 0.2)
+    draw_circle_midpoint(100 + bird_w // 2, y + bird_h // 2, bird_w // 2)
 
-    glColor3f(0.0, 0.0, 0.0) 
-    draw_circle(100 + bird_w // 1.5, y + bird_h // 1.5, bird_w // 8)
+    glColor3f(0.0, 0.0, 0.0)
+    draw_circle_midpoint(100 + bird_w // 1.5, y + bird_h // 1.5, bird_w // 8)
 
-    glColor3f(1.0, 0.5, 0.0)  
+    glColor3f(1.0, 0.5, 0.0)
     glBegin(GL_TRIANGLES)
     glVertex2f(100 + bird_w, y + bird_h // 2)
     glVertex2f(100 + bird_w + bird_w // 4, y + bird_h // 2.5)
     glVertex2f(100 + bird_w, y + bird_h // 1.5)
     glEnd()
-
 
 def check_collision():
     global bird_y_axis
@@ -226,9 +206,9 @@ def display():
 
 def draw_score():
     glColor3f(1.0, 1.0, 1.0)
-    glRasterPos2f(20, height - 30)
-    for c in str(score):
-        glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, ord(c))
+    glRasterPos2f(width - 100, height - 30)
+    for char in str(score):
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, ord(char))
 
 def timer(value):
     global bird_y_axis, velosity, game_run
@@ -237,42 +217,62 @@ def timer(value):
         velosity += gravity
         bird_y_axis += velosity
 
-        if bird_y_axis <= 0:
+        if bird_y_axis < 0:
             bird_y_axis = 0
-            velosity = 0
-        if bird_y_axis + bird_h >= height:
-            bird_y_axis = height - bird_h
             velosity = 0
 
         update_pilr()
 
         if check_collision():
             game_run = False
+            print("Game Over")
 
     glutPostRedisplay()
-    glutTimerFunc(16, timer, 0)
+    glutTimerFunc(20, timer, 0)
 
-def key_pressed(key, x, y):
-    global velosity, game_run, score, pilr
+def keyboard(key, x, y):
+    global bird_y_axis, velosity
+    if key == b' ':
+        velosity = 8
+def draw_circle_midpoint(x_center, y_center, radius):
 
-    if key == b' ' and not game_run:
-        game_run = True
-        bird_y_axis = height // 2
-        velosity = 0
-        score = 0
-        pilr.clear()
-        generate_pilr()
+    x = radius
+    y = 0
+    p = 1 - radius  
 
-    if key == b' ' and game_run:
-        velosity = bird_lft
+    plot_circle_points(x_center, y_center, x, y)
 
-glutInit()
-glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB)
-glutInitWindowSize(width, height)
-glutCreateWindow(b"Flappy Bird Game CSE 423 Lab Project")
 
-init()
-glutDisplayFunc(display)
-glutKeyboardFunc(key_pressed)
-glutTimerFunc(16, timer, 0)
-glutMainLoop()
+    while x > y:
+        y += 1
+        if p <= 0:
+            p += 2 * y + 1  
+        else:
+            x -= 1
+            p += 2 * y - 2 * x + 1
+        plot_circle_points(x_center, y_center, x, y)
+
+def plot_circle_points(x_center, y_center, x, y):
+
+    glVertex2f(x_center + x, y_center + y)
+    glVertex2f(x_center - x, y_center + y)
+    glVertex2f(x_center + x, y_center - y)
+    glVertex2f(x_center - x, y_center - y)
+    glVertex2f(x_center + y, y_center + x)
+    glVertex2f(x_center - y, y_center + x)
+    glVertex2f(x_center + y, y_center - x)
+    glVertex2f(x_center - y, y_center - x)
+
+def main():
+    glutInit(sys.argv)
+    glutInitDisplayMode(GLUT_RGB | GLUT_SINGLE)
+    glutInitWindowSize(width, height)
+    glutCreateWindow(b"Flappy Bird")
+    init()
+    glutDisplayFunc(display)
+    glutKeyboardFunc(keyboard)
+    glutTimerFunc(20, timer, 0)
+    glutMainLoop()
+
+if __name__ == "__main__":
+    main()
